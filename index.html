@@ -1,1 +1,729 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IUEP-MA — Maquette Navigable</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #1A5C2A;
+    --primary-dark: #123D1D;
+    --primary-soft: #EBF5EC;
+    --accent: #B8860B;
+    --navy: #1E3A5F;
+    --text: #161712;
+    --text-soft: #5F6258;
+    --text-muted: #8B8F84;
+    --bg: #FFFFFF;
+    --surface: #F6F8F5;
+    --border: #E5E7E1;
+    --lime: #8DC63F;
+  }
+  body { font-family: 'Outfit', system-ui, sans-serif; background: var(--surface); color: var(--text); }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed; top: 0; inset-x: 0; z-index: 100;
+    background: var(--primary); height: 68px;
+    display: flex; align-items: center; padding: 0 2rem;
+    justify-content: space-between;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+  }
+  .nav-logo { color: #fff; font-weight: 800; font-size: 1.1rem; text-decoration: none; display:flex;align-items:center;gap:10px; }
+  .nav-logo span { font-size: 0.65rem; color: rgba(255,255,255,0.6); display:block;font-weight:400;letter-spacing:1px;text-transform:uppercase; }
+  .nav-links { display: flex; gap: 0.25rem; align-items: center; }
+  .nav-links a {
+    color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.82rem;
+    font-weight: 500; padding: 0.5rem 0.9rem; border-radius: 8px;
+    transition: background 0.2s; cursor: pointer;
+  }
+  .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.12); color: #fff; }
+  .nav-cta {
+    background: var(--accent); color: #fff; padding: 0.5rem 1.1rem;
+    border-radius: 8px; font-weight: 700; font-size: 0.82rem;
+    border: none; cursor: pointer; text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* ── Pages ── */
+  .page { display: none; padding-top: 68px; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: calc(100vh - 68px);
+    background: linear-gradient(100deg, #0d2b1a 0%, #1a4a2e 60%, #2d6b3a 100%);
+    display: flex; align-items: center; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: "";position:absolute;inset:0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero-inner { max-width: 1280px; margin: 0 auto; padding: 4rem 2rem; display: grid; grid-template-columns: 1fr 320px; gap: 3rem; align-items: center; width: 100%; position: relative; z-index: 1; }
+  .hero-badge { display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:99px;padding:6px 14px;margin-bottom:1.5rem; }
+  .hero-badge-dot { width:8px;height:8px;border-radius:50%;background:var(--lime); }
+  .hero-badge span { font-size:0.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff; }
+  .hero h1 { font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 900; color: #fff; line-height: 1.02; margin-bottom: 1rem; }
+  .hero h1 em { color: var(--lime); font-style: normal; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: rgba(255,255,255,0.7); font-size: 0.95rem; line-height: 1.7; margin-bottom: 0.75rem; max-width: 480px; }
+  .hero-tag { color: var(--lime); font-size: 0.8rem; font-weight: 600; margin-bottom: 2rem; }
+  .hero-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+  .btn-primary { background: var(--accent); color: #fff; padding: 0.85rem 1.5rem; border-radius: 12px; font-weight: 700; font-size: 0.875rem; border: none; cursor: pointer; text-decoration: none; display: inline-block; transition: transform 0.2s; }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-ghost { background: rgba(255,255,255,0.1); color: #fff; padding: 0.85rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: 0.875rem; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; text-decoration: none; display: inline-block; }
+  .hero-stats { display: flex; gap: 0; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 1.5rem; }
+  .hero-stat { flex: 1; }
+  .hero-stat + .hero-stat { border-left: 1px solid rgba(255,255,255,0.12); padding-left: 1.25rem; }
+  .hero-stat-num { font-size: 2.25rem; font-weight: 900; color: #fff; line-height: 1; }
+  .hero-stat-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+  /* Panel filières droite */
+  .fil-panel { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 1.5rem; }
+  .fil-panel-header { text-align: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .fil-panel-promo { font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 0.5rem; }
+  .fil-panel-places { font-size: 3rem; font-weight: 900; color: #fff; line-height: 1; }
+  .fil-panel-sub { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+  .fil-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.2s; text-decoration: none; }
+  .fil-row:hover { background: rgba(255,255,255,0.1); }
+  .fil-row-icon { font-size: 1.25rem; }
+  .fil-row-name { font-size: 0.8rem; font-weight: 600; color: #fff; }
+  .fil-row-spec { font-size: 0.65rem; color: rgba(255,255,255,0.5); }
+  .fil-badge { font-size: 0.6rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-left: auto; flex-shrink: 0; }
+  .badge-open { background: var(--primary); color: #fff; }
+  .badge-soon { background: var(--accent); color: #fff; }
+  .badge-wip { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+  .drapeau { height: 3px; display: flex; margin-top: 1rem; border-radius: 2px; overflow: hidden; }
+  .drapeau div { flex: 1; }
+
+  /* ── Sections génériques ── */
+  .section { padding: 5rem 2rem; }
+  .section-inner { max-width: 1280px; margin: 0 auto; }
+  .eyebrow { font-size: 0.7rem; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem; }
+  .section-title { font-size: clamp(1.8rem, 3.5vw, 2.75rem); font-weight: 900; color: var(--navy); line-height: 1.15; margin-bottom: 1rem; }
+  .section-title em { color: var(--primary); font-style: normal; }
+  .section-desc { color: var(--text-soft); font-size: 0.9rem; line-height: 1.7; max-width: 480px; }
+
+  /* Stats strip */
+  .stats-strip { background: #fff; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .stats-grid { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+  .stat-cell { text-align: center; padding: 2rem 1.5rem; border-right: 1px solid var(--border); }
+  .stat-cell:last-child { border-right: none; }
+  .stat-num { font-size: 2.25rem; font-weight: 900; color: var(--primary); }
+  .stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Cards */
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+  .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(26,92,42,0.10); }
+  .card:hover::before { transform: scaleX(1); }
+  .card-icon { font-size: 2.25rem; margin-bottom: 1rem; display: block; }
+  .card-title { font-size: 1.05rem; font-weight: 700; color: var(--navy); margin-bottom: 0.5rem; }
+  .card-sub { font-size: 0.75rem; font-weight: 600; color: var(--accent); margin-bottom: 0.5rem; }
+  .card-text { font-size: 0.82rem; color: var(--text-soft); line-height: 1.6; margin-bottom: 1rem; }
+  .card-status { display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
+  .status-open { background: rgba(26,92,42,0.08); color: var(--primary); }
+  .status-soon { background: rgba(184,134,11,0.10); color: var(--accent); }
+  .status-wip { background: rgba(0,0,0,0.05); color: var(--text-muted); }
+  .card-link { font-size: 0.82rem; font-weight: 600; color: var(--primary); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+
+  /* Spec badges */
+  .spec-badge { display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: rgba(26,92,42,0.07); color: var(--primary); border: 1px solid rgba(26,92,42,0.12); margin: 2px; }
+
+  /* Directeur section */
+  .directeur-section { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); }
+  .directeur-inner { max-width: 1280px; margin: 0 auto; padding: 5rem 2rem; display: grid; grid-template-columns: 240px 1fr; gap: 4rem; align-items: center; }
+  .directeur-photo { aspect-ratio: 3/4; border-radius: 18px; background: linear-gradient(155deg, #2E7D32, #66BB6A); overflow: hidden; position: relative; }
+  .directeur-photo-inner { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 4rem; }
+  .directeur-tag { position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 5px 14px; border-radius: 99px; white-space: nowrap; }
+  .directeur-eyebrow { font-size: 0.65rem; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--lime); margin-bottom: 1rem; }
+  .directeur-quote { font-size: clamp(1.4rem, 2.5vw, 2.2rem); font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 1.5rem; font-style: italic; }
+  .directeur-quote em { color: var(--accent); font-style: normal; }
+  .directeur-text { color: rgba(255,255,255,0.70); font-size: 0.9rem; line-height: 1.75; margin-bottom: 1rem; }
+  .directeur-sig-line { width: 32px; height: 2px; background: var(--accent); margin-bottom: 10px; }
+  .directeur-sig-name { font-weight: 700; color: #fff; font-size: 1rem; }
+  .directeur-sig-role { font-size: 0.75rem; color: rgba(255,255,255,0.45); }
+
+  /* Parcours phases */
+  .phases-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 2rem; }
+  .phase-card { border-radius: 16px; padding: 1.5rem; }
+  .phase-num { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; margin-bottom: 0.75rem; }
+  .phase-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 0.25rem; }
+  .phase-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .phase-dur { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; display: inline-block; margin-bottom: 0.75rem; }
+  .phase-text { font-size: 0.78rem; line-height: 1.6; }
+  .phase-bar { display: flex; height: 8px; border-radius: 99px; overflow: hidden; gap: 2px; margin-top: 1.5rem; }
+
+  /* Actu carrousel */
+  .actu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  .actu-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; text-decoration: none; display: block; transition: transform 0.2s; }
+  .actu-card:hover { transform: translateY(-3px); }
+  .actu-cover { height: 120px; display: flex; align-items: flex-end; padding: 0.75rem; position: relative; }
+  .actu-cat { font-size: 0.65rem; font-weight: 700; background: var(--accent); color: #fff; padding: 3px 10px; border-radius: 99px; }
+  .actu-body { padding: 1rem; }
+  .actu-title { font-size: 0.85rem; font-weight: 700; color: var(--navy); margin-bottom: 0.5rem; line-height: 1.4; }
+  .actu-meta { font-size: 0.7rem; color: var(--text-muted); }
+
+  /* CTA Bannière */
+  .cta-section { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 4rem 2rem; }
+  .cta-inner { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap; }
+  .cta-promo { font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 0.5rem; }
+  .cta-title { font-size: clamp(1.5rem, 3vw, 2.5rem); font-weight: 900; color: #fff; margin-bottom: 0.5rem; }
+  .cta-sub { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+
+  /* Contact */
+  .contact-grid { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start; }
+  .form-card { background: #fff; border-radius: 20px; border: 1px solid var(--border); overflow: hidden; }
+  .form-header { padding: 2rem 2.5rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .form-body { padding: 1.5rem 2.5rem 2rem; }
+  .form-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-soft); display: block; margin-bottom: 0.5rem; }
+  .form-input { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.85rem; color: var(--text); background: #fff; margin-bottom: 1.25rem; font-family: inherit; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .type-btns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 1.25rem; }
+  .type-btn { padding: 0.6rem; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.75rem; font-weight: 600; color: var(--text-soft); background: #fff; cursor: pointer; text-align: center; transition: all 0.2s; }
+  .type-btn.selected { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+  .info-card-sm { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem; display: flex; align-items: flex-start; gap: 12px; margin-bottom: 0.75rem; }
+  .info-icon-sm { width: 36px; height: 36px; border-radius: 10px; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+  .cta-card { background: var(--primary); border-radius: 20px; padding: 1.5rem; margin-bottom: 0.75rem; }
+
+  /* À propos */
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+  .timeline-item { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+  .timeline-dot { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-soft); border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: var(--primary); flex-shrink: 0; }
+
+  /* Alumnis */
+  .map-placeholder { background: linear-gradient(135deg, #e8f5ec, #c8e6d0); border-radius: 16px; height: 320px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); margin-bottom: 1.5rem; flex-direction: column; gap: 0.5rem; }
+  .filter-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .filter-btn { padding: 0.4rem 1rem; border-radius: 99px; border: 1px solid var(--border); font-size: 0.75rem; font-weight: 600; background: #fff; color: var(--text-soft); cursor: pointer; }
+  .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .alumni-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .alumni-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; }
+  .alumni-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--primary); font-size: 1rem; margin-bottom: 0.75rem; }
+
+  /* Shop */
+  .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .product-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .product-img { height: 140px; background: linear-gradient(135deg, #e8f5ec, #c8e6d0); display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+  .product-body { padding: 1rem; }
+  .product-name { font-size: 0.85rem; font-weight: 700; color: var(--navy); margin-bottom: 0.25rem; }
+  .product-price { font-size: 0.9rem; font-weight: 800; color: var(--primary); }
+  .product-unit { font-size: 0.7rem; color: var(--text-muted); }
+
+  /* Footer */
+  footer { background: linear-gradient(180deg, var(--primary-dark), #0A1F10); padding: 3rem 2rem 1rem; }
+  .footer-grid { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2.5rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .footer-title { font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 1rem; }
+  .footer-link { display: block; font-size: 0.8rem; color: rgba(255,255,255,0.55); text-decoration: none; margin-bottom: 0.5rem; }
+  .footer-bottom { max-width: 1280px; margin: 0 auto; padding-top: 1rem; display: flex; justify-content: space-between; align-items: center; }
+  .footer-copy { font-size: 0.7rem; color: rgba(255,255,255,0.25); }
+
+  /* Modal */
+  .modal { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 1rem; }
+  .modal.open { display: flex; }
+  .modal-box { background: #fff; border-radius: 24px; max-width: 460px; width: 100%; padding: 2.5rem; position: relative; text-align: center; }
+  .modal-close { position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--border); cursor: pointer; font-size: 1rem; }
+
+  /* Page header générique */
+  .page-header { background: linear-gradient(160deg, var(--primary), var(--primary-dark)); padding: 5rem 2rem 3rem; }
+  .page-header-inner { max-width: 1280px; margin: 0 auto; }
+  .page-header h1 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; color: #fff; margin-top: 0.75rem; }
+  .page-header p { color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-top: 0.75rem; max-width: 560px; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hero-inner, .directeur-inner, .about-grid, .contact-grid { grid-template-columns: 1fr; }
+    .fil-panel, .hero-inner > div:last-child { display: none; }
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .cards-grid, .actu-grid, .alumni-grid { grid-template-columns: 1fr; }
+    .shop-grid { grid-template-columns: repeat(2,1fr); }
+    .phases-grid { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .cta-inner { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav>
+  <a class="nav-logo" onclick="showPage('home')">
+    <div>
+      <div>IUEP-MA</div>
+      <span>Métiers de l'Agriculture · Djougou</span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a onclick="showPage('home')" id="nav-home" class="active">Accueil</a>
+    <a onclick="showPage('apropos')" id="nav-apropos">À propos</a>
+    <a onclick="showPage('formations')" id="nav-formations">Formations</a>
+    <a onclick="showPage('actualites')" id="nav-actualites">Actualités</a>
+    <a onclick="showPage('alumnis')" id="nav-alumnis">Alumnis</a>
+    <a onclick="showPage('partenaires')" id="nav-partenaires">Partenaires</a>
+    <a onclick="showPage('shop')" id="nav-shop">Boutique UAI</a>
+  </div>
+  <a class="nav-cta" onclick="showPage('contact')">Candidater →</a>
+</nav>
+
+
+<!-- ═══════════ PAGE : ACCUEIL ═══════════ -->
+<div class="page active" id="page-home">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-badge"><div class="hero-badge-dot"></div><span>Établissement public · MESRS · LMD</span></div>
+        <h1>Former les<br><em>racines</em><br>de l'agriculture<br><span>africaine</span></h1>
+        <p>L'IUEP-MA forme des <strong style="color:#fff">entrepreneurs agricoles</strong> à travers un parcours unique de 24 mois — immersion terrain, formation académique et développement de projet d'entreprise.</p>
+        <p class="hero-tag">✓ Filière Agripreneuriat — Spécialités AGR & AEL · FQCS disponible</p>
+        <div class="hero-btns">
+          <a class="btn-primary" onclick="showPage('contact')">Candidater 2026–2027 →</a>
+          <a class="btn-ghost" onclick="showPage('formations')">Nos formations</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="hero-stat-num">47</div><div class="hero-stat-label">Fermes partenaires</div></div>
+          <div class="hero-stat"><div class="hero-stat-num">82<span style="font-size:1.2rem;color:var(--lime)">%</span></div><div class="hero-stat-label">Entrepreneurs actifs</div></div>
+          <div class="hero-stat"><div class="hero-stat-num">320<span style="font-size:1.2rem;color:var(--lime)">+</span></div><div class="hero-stat-label">Diplômés formés</div></div>
+        </div>
+      </div>
+      <div class="fil-panel">
+        <div class="fil-panel-header">
+          <div class="fil-panel-promo">Promotion 2026–2027</div>
+          <div class="fil-panel-places">50</div>
+          <div class="fil-panel-sub">places disponibles</div>
+        </div>
+        <a class="fil-row" onclick="showPage('formations')"><div class="fil-row-icon">🌿</div><div><div class="fil-row-name">Agripreneuriat</div><div class="fil-row-spec"><span class="spec-badge">AGR</span><span class="spec-badge">AEL</span></div></div><span class="fil-badge badge-open">Ouvert</span></a>
+        <a class="fil-row" onclick="showPage('formations')"><div class="fil-row-icon">🚜</div><div><div class="fil-row-name">Mécanisation Agricole</div><div class="fil-row-spec">FI · 24 mois</div></div><span class="fil-badge badge-soon">Bientôt</span></a>
+        <a class="fil-row" onclick="showPage('formations')"><div class="fil-row-icon">🫙</div><div><div class="fil-row-name">Transformation Agroalim.</div><div class="fil-row-spec">FI · 24 mois</div></div><span class="fil-badge badge-wip">En cours</span></a>
+        <a class="fil-row" onclick="showPage('formations')"><div class="fil-row-icon">⚡</div><div><div class="fil-row-name">FQCS — Spécialités courtes</div><div class="fil-row-spec">6 mois · plusieurs spécialités</div></div><span class="fil-badge badge-open">Ouvert</span></a>
+        <div class="drapeau"><div style="background:#169B62"></div><div style="background:#F7E017"></div><div style="background:#E8112D"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats strip -->
+  <div class="stats-strip">
+    <div class="stats-grid">
+      <div class="stat-cell"><div class="stat-num" style="color:var(--primary)">4<span style="color:var(--accent);font-size:1.5rem">ans</span></div><div class="stat-label">Depuis 2022</div></div>
+      <div class="stat-cell"><div class="stat-num">47</div><div class="stat-label">Fermes partenaires</div></div>
+      <div class="stat-cell"><div class="stat-num">82<span style="color:var(--accent);font-size:1.5rem">%</span></div><div class="stat-label">Taux d'insertion</div></div>
+      <div class="stat-cell"><div class="stat-num">320<span style="color:var(--accent);font-size:1.5rem">+</span></div><div class="stat-label">Diplômés formés</div></div>
+    </div>
+  </div>
+
+  <!-- Mot du directeur -->
+  <div class="directeur-section">
+    <div class="directeur-inner">
+      <div style="position:relative">
+        <div class="directeur-photo"><div class="directeur-photo-inner">👨‍🏫</div></div>
+        <div class="directeur-tag">Dr Clément OGNI · Directeur</div>
+      </div>
+      <div>
+        <div class="directeur-eyebrow">Mot du Directeur</div>
+        <div class="directeur-quote">"L'agriculture n'est pas un héritage à <em>conserver</em>, c'est un avenir à <em>bâtir</em>."</div>
+        <p class="directeur-text">L'IUEP-MA a été fondé avec une conviction : le Bénin a besoin d'entrepreneurs agricoles. Notre modèle — immersion, formation, pré-insertion — prépare chaque étudiant à créer une entreprise agricole viable. Depuis octobre 2022, nous conduisons notre 4ème promotion d'Agripreneurs sur deux sites à Sérou.</p>
+        <div class="directeur-sig-line"></div>
+        <div class="directeur-sig-name">Dr Clément Ogni</div>
+        <div class="directeur-sig-role">Directeur · Docteur en Sciences Agronomiques</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actualités -->
+  <div class="section" style="background:#fff">
+    <div class="section-inner">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem">
+        <div><p class="eyebrow">Blog & Actualités</p><h2 class="section-title">Dernières <em>nouvelles</em></h2></div>
+        <a style="font-size:0.82rem;font-weight:600;color:var(--primary);cursor:pointer" onclick="showPage('actualites')">Toutes les actualités →</a>
+      </div>
+      <div class="actu-grid">
+        <a class="actu-card" onclick="showPage('actualites')"><div class="actu-cover" style="background:linear-gradient(135deg,#0D2B17,#2E7D45)"><span class="actu-cat">Cérémonie</span></div><div class="actu-body"><div class="actu-title">Sortie officielle de la Promotion 2 — Agripreneuriat</div><div class="actu-meta">15 mai 2026 · Dr Clément Ogni</div></div></a>
+        <a class="actu-card" onclick="showPage('actualites')"><div class="actu-cover" style="background:linear-gradient(135deg,#1A5C2A,#4A8B4C)"><span class="actu-cat">Recrutement</span></div><div class="actu-body"><div class="actu-title">Ouverture des candidatures 2026–2027</div><div class="actu-meta">1 mai 2026 · IUEP-MA</div></div></a>
+        <a class="actu-card" onclick="showPage('actualites')"><div class="actu-cover" style="background:linear-gradient(135deg,#4A2508,#8B4513)"><span class="actu-cat">Partenariat</span></div><div class="actu-body"><div class="actu-title">12 nouvelles fermes dans la Donga</div><div class="actu-meta">20 avril 2026 · IUEP-MA</div></div></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nos formations -->
+  <div class="section" style="background:var(--surface)">
+    <div class="section-inner">
+      <div style="max-width:520px;margin-bottom:3rem"><p class="eyebrow">Nos programmes</p><h2 class="section-title">Des filières pour bâtir <em>l'agriculture de demain</em></h2><p class="section-desc" style="margin-top:.5rem">Cliquez sur une filière pour découvrir son programme complet.</p></div>
+      <div class="cards-grid">
+        <div class="card" onclick="showPage('formation-detail')" style="cursor:pointer">
+          <span class="card-icon">🌿</span>
+          <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:.75rem"><span class="card-status status-open">Inscriptions ouvertes</span></div>
+          <div class="card-title">Agripreneuriat</div>
+          <div class="card-sub">DUT Métiers · 24 mois</div>
+          <p class="card-text">Production végétale, élevage, entrepreneuriat agricole. 70% pratique en ferme partenaire.</p>
+          <div style="margin-bottom:1rem"><span class="spec-badge">AGR — Agriculture</span><span class="spec-badge">AEL — Agro-Élevage</span></div>
+          <a class="card-link">Voir la filière →</a>
+        </div>
+        <div class="card" style="cursor:pointer">
+          <span class="card-icon">🚜</span>
+          <div style="margin-bottom:.75rem"><span class="card-status status-soon">Ouverture prochaine</span></div>
+          <div class="card-title">Mécanisation Agricole</div>
+          <div class="card-sub">DUT Métiers · 24 mois</div>
+          <p class="card-text">Conduite, maintenance et gestion des équipements agricoles modernes.</p>
+        </div>
+        <div class="card" style="cursor:pointer">
+          <span class="card-icon">🫙</span>
+          <div style="margin-bottom:.75rem"><span class="card-status status-wip">Habilitation en cours</span></div>
+          <div class="card-title">Transformation Agroalim.</div>
+          <div class="card-sub">DUT Métiers · 24 mois</div>
+          <p class="card-text">Conservation, transformation et valorisation des produits agricoles.</p>
+        </div>
+      </div>
+      <div style="margin-top:2rem;text-align:center"><a class="btn-primary" onclick="showPage('formations')" style="display:inline-block">Voir toutes les formations →</a></div>
+    </div>
+  </div>
+
+  <!-- Pourquoi -->
+  <div class="section" style="background:#fff">
+    <div class="section-inner">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start">
+        <div>
+          <p class="eyebrow">Pourquoi nous choisir</p>
+          <h2 class="section-title">Une formation <em>réellement différente</em></h2>
+          <p style="color:var(--text-soft);font-size:.9rem;line-height:1.7;margin-bottom:1.5rem">70% pratique, 30% théorie. Binôme enseignant-professionnel. Immersion terrain avant les cours. 9 mois pour développer son entreprise.</p>
+          <a class="btn-ghost" style="background:var(--primary-soft);color:var(--primary);border-color:transparent" onclick="showPage('apropos')">En savoir plus →</a>
+          <div class="phases-grid" style="margin-top:2rem">
+            <div class="phase-card" style="background:var(--surface);border:1px solid var(--border)"><div class="phase-num" style="background:var(--primary);color:#fff">1</div><div class="phase-label" style="color:var(--text-muted)">Phase 1</div><div class="phase-title" style="color:var(--navy)">Immersion</div><span class="phase-dur" style="background:rgba(26,92,42,.08);color:var(--primary)">3 mois</span><p class="phase-text" style="color:var(--text-soft)">En ferme partenaire avant tout cours théorique</p></div>
+            <div class="phase-card" style="background:var(--primary)"><div class="phase-num" style="background:rgba(255,255,255,.2);color:#fff">2</div><div class="phase-label" style="color:rgba(255,255,255,.6)">Phase 2</div><div class="phase-title" style="color:#fff">Formation</div><span class="phase-dur" style="background:rgba(255,255,255,.15);color:#fff">12 mois</span><p class="phase-text" style="color:rgba(255,255,255,.7)">Cours + TP binôme universitaire & professionnel</p></div>
+            <div class="phase-card" style="background:#fff;border:1px solid var(--border);border-left:3px solid var(--accent)"><div class="phase-num" style="background:var(--accent);color:#fff">3</div><div class="phase-label" style="color:var(--text-muted)">Phase 3</div><div class="phase-title" style="color:var(--navy)">Pré-insertion</div><span class="phase-dur" style="background:rgba(184,134,11,.1);color:var(--accent)">9 mois</span><p class="phase-text" style="color:var(--text-soft)">Développement projet d'entreprise agricole</p></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.5rem;padding-top:4rem">
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--surface)"><span style="font-size:1.25rem">🌾</span><div><p style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:3px">Immersion terrain avant les cours</p><p style="font-size:.78rem;color:var(--text-soft)">3 mois en ferme partenaire — unique au Bénin</p></div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px"><span style="font-size:1.25rem">👨‍🏫</span><div><p style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:3px">Binôme universitaire + professionnel</p><p style="font-size:.78rem;color:var(--text-soft)">Chaque cours dispensé par deux experts complémentaires</p></div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--surface)"><span style="font-size:1.25rem">🎓</span><div><p style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:3px">DUT Métiers reconnu MESRS</p><p style="font-size:.78rem;color:var(--text-soft)">Habilité DGEAP, conforme LMD Bénin</p></div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px"><span style="font-size:1.25rem">📈</span><div><p style="font-size:.85rem;font-weight:600;color:var(--navy);margin-bottom:3px">82% entrepreneurs à 6 mois</p><p style="font-size:.78rem;color:var(--text-soft)">Promotions 1 & 2 sur le marché depuis 2024</p></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <div class="cta-inner">
+      <div><div class="cta-promo">Prochaine promotion</div><div class="cta-title">Rejoignez la promotion 2026–2027</div><div class="cta-sub">50 places · Bac ou DEAT · Clôture 30 septembre 2026</div></div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap"><a class="btn-primary" onclick="showPage('contact')">Candidater maintenant →</a><a class="btn-ghost" onclick="showPage('formations')">Nos formations</a></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-grid">
+      <div><div style="font-weight:800;font-size:1rem;color:#fff;margin-bottom:.75rem">IUEP-MA</div><p style="font-size:.8rem;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:1rem">Institut Universitaire d'Enseignement Professionnel en Métiers de l'Agriculture — Sérou, Djougou, Bénin.</p><div style="font-size:.7rem;padding:.5rem .75rem;border-radius:.5rem;display:inline-block;background:rgba(141,198,63,.08);border:1px solid rgba(141,198,63,.15);color:rgba(141,198,63,.6)">🏛️ MESRS — République du Bénin</div></div>
+      <div><div class="footer-title">Formations</div><a class="footer-link">🌿 Agripreneuriat</a><a class="footer-link">🚜 Mécanisation</a><a class="footer-link">🫙 Transformation</a><a class="footer-link">⚡ FQCS</a></div>
+      <div><div class="footer-title">Institut</div><a class="footer-link">À propos</a><a class="footer-link">Mot du Directeur</a><a class="footer-link">Nos sites</a><a class="footer-link">Alumnis</a></div>
+      <div><div class="footer-title">Contact</div><a class="footer-link">📍 Sérou — Djougou, Donga</a><a class="footer-link">✉️ contact@iuepma.bj</a><a class="footer-link">📞 +229 XX XX XX XX</a><a class="footer-link">🗺️ Google Maps →</a></div>
+    </div>
+    <div class="footer-bottom"><div class="footer-copy">© 2026 IUEP-MA · MDE Informatique & Réseaux</div><div class="footer-copy">Mentions légales · Confidentialité</div></div>
+  </footer>
+</div>
+
+
+<!-- ═══════════ PAGE : FORMATIONS ═══════════ -->
+<div class="page" id="page-formations">
+  <div class="page-header"><div class="page-header-inner"><div class="eyebrow" style="color:var(--lime)">Nos programmes</div><h1>Formations IUEP-MA</h1><p>Formation Initiale (DUT Métiers) et Formation Qualifiante Courte de Spécialisation (FQCS) — 70% pratique · Binôme enseignant-professionnel</p></div></div>
+  <div class="section" style="background:var(--surface)">
+    <div class="section-inner">
+      <h2 class="section-title" style="margin-bottom:.5rem">Formation Initiale</h2>
+      <p style="color:var(--text-soft);font-size:.875rem;margin-bottom:2rem">DUT Métiers de l'Agriculture · 24 mois · Bac ou DEAT requis</p>
+      <div class="cards-grid">
+        <div class="card" onclick="showPage('formation-detail')" style="cursor:pointer"><span class="card-icon">🌿</span><span class="card-status status-open">Inscriptions ouvertes</span><div class="card-title" style="margin-top:.75rem">Agripreneuriat</div><div class="card-sub">DUT · 24 mois · AGR & AEL</div><p class="card-text">La filière phare de l'IUEP-MA depuis 2022. 4 promotions conduites, 2 sur le marché.</p><div style="margin-bottom:1rem"><span class="spec-badge">AGR — Agriculture</span><span class="spec-badge">AEL — Agro-Élevage</span></div><a class="card-link">Voir le programme complet →</a></div>
+        <div class="card"><span class="card-icon">🚜</span><span class="card-status status-soon">Ouverture prochaine</span><div class="card-title" style="margin-top:.75rem">Mécanisation Agricole</div><div class="card-sub">DUT · 24 mois</div><p class="card-text">Conduite, maintenance et gestion des équipements agricoles modernes au service des exploitations.</p></div>
+        <div class="card"><span class="card-icon">🫙</span><span class="card-status status-wip">Habilitation en cours</span><div class="card-title" style="margin-top:.75rem">Transformation Agroalim.</div><div class="card-sub">DUT · 24 mois</div><p class="card-text">Conservation, transformation et valorisation des produits agricoles béninois.</p></div>
+      </div>
+      <h2 class="section-title" style="margin:3rem 0 .5rem">FQCS — Formation Qualifiante Courte</h2>
+      <p style="color:var(--text-soft);font-size:.875rem;margin-bottom:2rem">Certificat de fin de formation · 6 mois (défaut) · Professionnels en activité</p>
+      <div class="cards-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="card"><span class="card-icon">🐰</span><div class="card-title">Cuniculture</div><div class="card-sub">Promo 1 — Diplômés</div><p class="card-text">Élevage de lapins — 6 mois</p></div>
+        <div class="card"><span class="card-icon">🐔</span><div class="card-title">Aviculture</div><div class="card-sub">Promo 1 — Diplômés</div><p class="card-text">Élevage de volailles — 6 mois</p></div>
+        <div class="card"><span class="card-icon">🥬</span><div class="card-title">Maraîchage</div><div class="card-sub">Promo 1 — Diplômés</div><p class="card-text">Production légumière — 6 mois</p></div>
+        <div class="card"><span class="card-icon">🐷</span><div class="card-title">Porciculture</div><div class="card-sub">Promo 1 — Diplômés</div><p class="card-text">Élevage porcin — 6 mois</p></div>
+        <div class="card"><span class="card-icon">🐝</span><div class="card-title">Apiculture</div><div class="card-sub">Promo 1 — Diplômés</div><p class="card-text">Production miel — 6 mois</p></div>
+        <div class="card"><span class="card-icon">🚜</span><div class="card-title">Conduite d'équipements</div><div class="card-sub">Promo 1 — Diplômés</div><p class="card-text">Engins agricoles — 6 mois</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ PAGE : DÉTAIL FILIÈRE ═══════════ -->
+<div class="page" id="page-formation-detail">
+  <div class="page-header"><div class="page-header-inner"><div class="eyebrow" style="color:var(--lime)">Formation Initiale</div><h1>🌿 Agripreneuriat</h1><p>DUT Métiers de l'Agriculture · 24 mois · Bac ou DEAT · 2 spécialités</p></div></div>
+  <div class="section" style="background:var(--surface)">
+    <div class="section-inner" style="display:grid;grid-template-columns:1fr 280px;gap:2rem">
+      <div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:2rem;margin-bottom:1.5rem">
+          <h3 style="font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:1rem">Spécialités</h3>
+          <div style="display:flex;gap:1rem">
+            <div style="flex:1;background:var(--surface);border-radius:12px;padding:1rem"><div style="font-weight:700;color:var(--primary);margin-bottom:.25rem">AGR — Agriculture</div><p style="font-size:.8rem;color:var(--text-soft)">Production végétale, cultures vivrières, maraîchage professionnel</p></div>
+            <div style="flex:1;background:var(--surface);border-radius:12px;padding:1rem"><div style="font-weight:700;color:var(--primary);margin-bottom:.25rem">AEL — Agro-Élevage</div><p style="font-size:.8rem;color:var(--text-soft)">Élevage, zootechnie, production animale intégrée</p></div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:2rem;margin-bottom:1.5rem">
+          <h3 style="font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:1rem">Parcours pédagogique — 24 mois</h3>
+          <div class="phases-grid">
+            <div class="phase-card" style="background:var(--surface);border:1px solid var(--border)"><div class="phase-num" style="background:var(--primary);color:#fff">1</div><div class="phase-label" style="color:var(--text-muted)">Phase 1</div><div class="phase-title" style="color:var(--navy)">Immersion terrain</div><span class="phase-dur" style="background:rgba(26,92,42,.08);color:var(--primary)">3 mois</span><p class="phase-text" style="color:var(--text-soft)">Intégration en ferme partenaire. Découverte du milieu agricole béninois.</p></div>
+            <div class="phase-card" style="background:var(--primary)"><div class="phase-num" style="background:rgba(255,255,255,.2);color:#fff">2</div><div class="phase-label" style="color:rgba(255,255,255,.6)">Phase 2</div><div class="phase-title" style="color:#fff">Formation académique</div><span class="phase-dur" style="background:rgba(255,255,255,.15);color:#fff">12 mois</span><p class="phase-text" style="color:rgba(255,255,255,.7)">Cours + TP dispensés par binôme universitaire & professionnel.</p></div>
+            <div class="phase-card" style="background:#fff;border:1px solid var(--border);border-left:3px solid var(--accent)"><div class="phase-num" style="background:var(--accent);color:#fff">3</div><div class="phase-label" style="color:var(--text-muted)">Phase 3</div><div class="phase-title" style="color:var(--navy)">Pré-insertion</div><span class="phase-dur" style="background:rgba(184,134,11,.1);color:var(--accent)">9 mois</span><p class="phase-text" style="color:var(--text-soft)">Développement d'un projet d'entreprise agricole avec mentors.</p></div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:2rem">
+          <h3 style="font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:1rem">Débouchés</h3>
+          <p style="font-size:.875rem;color:var(--text-soft);line-height:1.7">Entrepreneur agricole indépendant, gérant d'exploitation agricole, conseiller agricole, responsable d'unité de production en agro-industrie. 82% des diplômés en activité à 6 mois.</p>
+        </div>
+      </div>
+      <div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1rem">
+          <h4 style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:1rem">Conditions d'accès</h4>
+          <p style="font-size:.82rem;color:var(--text);margin-bottom:.5rem">✓ Bac ou DEAT</p>
+          <p style="font-size:.82rem;color:var(--text-soft);font-size:.78rem">Dossier de candidature + entretien de motivation</p>
+        </div>
+        <div style="background:var(--primary);border-radius:16px;padding:1.5rem;color:#fff">
+          <div style="font-size:.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:.5rem">Candidater</div>
+          <div style="font-size:1.5rem;font-weight:900;margin-bottom:.25rem">50 places</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.65);margin-bottom:1rem">Clôture 30 sept. 2026</div>
+          <a class="btn-primary" onclick="showPage('contact')" style="display:block;text-align:center">Postuler →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ PAGE : À PROPOS ═══════════ -->
+<div class="page" id="page-apropos">
+  <div class="page-header"><div class="page-header-inner"><div class="eyebrow" style="color:var(--lime)">L'Institut</div><h1>À propos de l'IUEP-MA</h1><p>Institut de type nouveau créé par décret ministériel — Sérou, Djougou, Bénin — depuis octobre 2022.</p></div></div>
+  <div class="section" style="background:var(--surface)">
+    <div class="section-inner">
+      <div class="about-grid" style="margin-bottom:4rem">
+        <div>
+          <p class="eyebrow">Notre mission</p>
+          <h2 class="section-title" style="margin-bottom:1rem">Former les <em>entrepreneurs agricoles</em> du Bénin</h2>
+          <p style="color:var(--text-soft);font-size:.9rem;line-height:1.75;margin-bottom:1rem">L'IUEP-MA est un établissement public sous tutelle du MESRS, coordonné par le CUEP et habilité par la DGEAP. Il applique un modèle pédagogique innovant basé sur 70% de pratique et 30% de théorie, avec des enseignements dispensés en binôme universitaire-professionnel.</p>
+          <p style="color:var(--text-soft);font-size:.9rem;line-height:1.75">L'institut s'étend sur deux sites à Sérou : le site pédagogique et l'Unité d'Application et d'Innovation (UAI), distants d'un kilomètre.</p>
+        </div>
+        <div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.5rem">
+            <h4 style="font-weight:700;color:var(--navy);margin-bottom:1.25rem;font-size:.9rem">Chiffres clés</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+              <div style="text-align:center;padding:1rem;background:var(--surface);border-radius:10px"><div style="font-size:1.75rem;font-weight:900;color:var(--primary)">2022</div><div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Ouverture</div></div>
+              <div style="text-align:center;padding:1rem;background:var(--surface);border-radius:10px"><div style="font-size:1.75rem;font-weight:900;color:var(--primary)">4</div><div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Promotions FI</div></div>
+              <div style="text-align:center;padding:1rem;background:var(--surface);border-radius:10px"><div style="font-size:1.75rem;font-weight:900;color:var(--primary)">1</div><div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Promo FQCS</div></div>
+              <div style="text-align:center;padding:1rem;background:var(--surface);border-radius:10px"><div style="font-size:1.75rem;font-weight:900;color:var(--primary)">47</div><div style="font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Fermes</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historique des directeurs -->
+      <h2 class="section-title" style="margin-bottom:2rem">Nos directeurs</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.75rem;display:flex;gap:1.25rem;align-items:flex-start">
+          <div style="width:60px;height:60px;border-radius:50%;background:var(--surface);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">👤</div>
+          <div>
+            <div style="font-size:.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:.25rem">Premier Directeur — Fondateur</div>
+            <div style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:.25rem">Léonard AFFOUDA</div>
+            <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.75rem">Octobre 2022 — (mandat fondateur)</div>
+            <p style="font-size:.8rem;color:var(--text-soft);line-height:1.6">A posé les fondations de l'IUEP-MA et lancé la première promotion d'Agripreneurs à Sérou.</p>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.75rem;display:flex;gap:1.25rem;align-items:flex-start;border-left:3px solid var(--primary)">
+          <div style="width:60px;height:60px;border-radius:50%;background:var(--primary-soft);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">👨‍🏫</div>
+          <div>
+            <div style="font-size:.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--primary);margin-bottom:.25rem">Directeur Actuel</div>
+            <div style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:.25rem">Dr Clément OGNI</div>
+            <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.75rem">En fonction · Docteur en Sciences Agronomiques</div>
+            <p style="font-size:.8rem;color:var(--text-soft);line-height:1.6">Sous sa direction, l'IUEP-MA a atteint 47 fermes partenaires et conduit 4 promotions d'Agripreneurs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ PAGE : ACTUALITÉS ═══════════ -->
+<div class="page" id="page-actualites">
+  <div class="page-header"><div class="page-header-inner"><div class="eyebrow" style="color:var(--lime)">Blog</div><h1>Actualités & Communiqués</h1><p>Vie de l'institut, recrutements, partenariats, événements et résultats des alumnis.</p></div></div>
+  <div class="section" style="background:var(--surface)">
+    <div class="section-inner">
+      <div class="filter-btns">
+        <span class="filter-btn active">Tout</span>
+        <span class="filter-btn">Communiqué</span>
+        <span class="filter-btn">Recrutement</span>
+        <span class="filter-btn">Activité</span>
+        <span class="filter-btn">Alumni</span>
+        <span class="filter-btn">Partenariat</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem">
+        <div class="actu-card"><div class="actu-cover" style="background:linear-gradient(135deg,#0D2B17,#2E7D45)"><span class="actu-cat">Cérémonie</span></div><div class="actu-body"><div class="actu-title">Sortie officielle Promotion 2 — 24 diplômés Agripreneurs</div><div class="actu-meta">15 mai 2026 · Dr Clément Ogni</div></div></div>
+        <div class="actu-card"><div class="actu-cover" style="background:linear-gradient(135deg,#1A5C2A,#4A8B4C)"><span class="actu-cat">Recrutement</span></div><div class="actu-body"><div class="actu-title">Ouverture des candidatures — Promotion 5 — 2026/2027</div><div class="actu-meta">1 mai 2026 · IUEP-MA</div></div></div>
+        <div class="actu-card"><div class="actu-cover" style="background:linear-gradient(135deg,#2D1B00,#6B4200)"><span class="actu-cat">Alumni</span></div><div class="actu-body"><div class="actu-title">3 alumnis primés au Prix Régional de l'Entrepreneuriat</div><div class="actu-meta">28 mars 2026 · IUEP-MA</div></div></div>
+        <div class="actu-card"><div class="actu-cover" style="background:linear-gradient(135deg,#4A2508,#8B4513)"><span class="actu-cat">Partenariat</span></div><div class="actu-body"><div class="actu-title">12 nouvelles fermes partenaires dans la Donga</div><div class="actu-meta">20 avril 2026 · IUEP-MA</div></div></div>
+        <div class="actu-card"><div class="actu-cover" style="background:linear-gradient(135deg,#0D1F2D,#1A4A6B)"><span class="actu-cat">Événement</span></div><div class="actu-body"><div class="actu-title">Atelier agroforesterie avec l'INRAB et la FAO</div><div class="actu-meta">5 avril 2026 · IUEP-MA</div></div></div>
+        <div class="actu-card"><div class="actu-cover" style="background:linear-gradient(135deg,#1A5C2A,#4A8B4C)"><span class="actu-cat">Recrutement</span></div><div class="actu-body"><div class="actu-title">Ouverture FQCS — Promotion 2 — 4 spécialités</div><div class="actu-meta">15 mars 2026 · IUEP-MA</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ PAGE : ALUMNIS ═══════════ -->
+<div class="page" id="page-alumnis">
+  <div class="page-header"><div class="page-header-inner"><div class="eyebrow" style="color:var(--lime)">Réseau</div><h1>Nos Alumnis</h1><p>2 promotions FI diplômées · 1 promotion FQCS · Entrepreneurs actifs dans tout le Bénin</p></div></div>
+  <div class="section" style="background:var(--surface)">
+    <div class="section-inner">
+      <div class="map-placeholder"><span style="font-size:2rem">🗺️</span><p style="font-size:.9rem;font-weight:600;color:var(--text-soft)">Carte interactive Bénin — Leaflet.js</p><p style="font-size:.78rem;color:var(--text-muted)">Alumnis géolocalisés par département</p></div>
+      <div class="filter-btns">
+        <span class="filter-btn active">Tous</span>
+        <span class="filter-btn">Formation Initiale</span>
+        <span class="filter-btn">FQCS</span>
+        <span class="filter-btn">AGR</span>
+        <span class="filter-btn">AEL</span>
+        <span class="filter-btn">Promo 2023</span>
+        <span class="filter-btn">Promo 2024</span>
+      </div>
+      <div class="alumni-grid">
+        <div class="alumni-card"><div class="alumni-avatar">KM</div><div style="font-weight:700;color:var(--navy);font-size:.9rem">Kofi Mensah</div><div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.5rem">Promo 2024 · AGR</div><div style="font-size:.78rem;color:var(--text-soft);margin-bottom:.5rem">🌱 Ferme maraîchère — Parakou</div><span class="spec-badge">Projet actif</span></div>
+        <div class="alumni-card"><div class="alumni-avatar">AS</div><div style="font-weight:700;color:var(--navy);font-size:.9rem">Aminata Sow</div><div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.5rem">Promo 2023 · AEL</div><div style="font-size:.78rem;color:var(--text-soft);margin-bottom:.5rem">🐔 Élevage avicole — Natitingou</div><span class="spec-badge">Projet actif</span></div>
+        <div class="alumni-card"><div class="alumni-avatar">BK</div><div style="font-weight:700;color:var(--navy);font-size:.9rem">Brice Koffi</div><div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.5rem">FQCS · Apiculture</div><div style="font-size:.78rem;color:var(--text-soft);margin-bottom:.5rem">🍯 Production miel — Djougou</div><span class="spec-badge">Projet actif</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ PAGE : PARTENAIRES ═══════════ -->
+<div class="page" id="page-partenaires">
+  <div class="page-header"><div class="page-header-inner"><div class="eyebrow" style="color:var(--lime)">Réseau terrain</div><h1>Fermes Partenaires</h1><p>47 fermes dans tous les départements du Bénin — stages garantis pour chaque promotion.</p></div></div>
+  <div class="section" style="background:var(--surface)">
+    <div class="section-inner">
+      <div class="map-placeholder"><span style="font-size:2rem">🗺️</span><p style="font-size:.9rem;font-weight:600;color:var(--text-soft)">Carte interactive — 47 fermes géolocalisées</p><p style="font-size:.78rem;color:var(--text-muted)">Filtrage par département et type d'activité</p></div>
+      <div class="filter-btns">
+        <span class="filter-btn active">Tous types</span>
+        <span class="filter-btn">Maraîchage</span>
+        <span class="filter-btn">Élevage</span>
+        <span class="filter-btn">Agroforesterie</span>
+        <span class="filter-btn">Mixte</span>
+        <span class="filter-btn">Transformation</span>
+      </div>
+      <div class="cards-grid">
+        <div class="card"><span class="card-icon">🌿</span><div class="card-title">Ferme Kpara</div><div class="card-sub">Maraîchage · Donga</div><p class="card-text">Spécialisée en production légumière. Accueille des promotions depuis 2022.</p></div>
+        <div class="card"><span class="card-icon">🐄</span><div class="card-title">Ranch Tchatchou</div><div class="card-sub">Élevage · Borgou</div><p class="card-text">Élevage bovin et production laitière. 3 promotions accueillies.</p></div>
+        <div class="card"><span class="card-icon">🌳</span><div class="card-title">Domaine Afouda</div><div class="card-sub">Agroforesterie · Atacora</div><p class="card-text">Système agroforestier intégré. Référence régionale.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ PAGE : CONTACT ═══════════ -->
+<div class="page" id="page-contact">
+  <div class="page-header"><div class="page-header-inner"><div class="eyebrow" style="color:var(--lime)">Nous contacter</div><h1>Une question ?<br><em style="color:var(--accent)">Écrivez-nous.</em></h1><p>Candidature, partenariat, renseignements — réponse sous 48h ouvrables.</p></div><div style="height:4px;display:flex;margin-top:2rem"><div style="flex:1;background:#169B62"></div><div style="flex:1;background:#F7E017"></div><div style="flex:1;background:#E8112D"></div></div></div>
+  <div class="section" style="background:var(--surface)">
+    <div class="section-inner">
+      <div class="contact-grid">
+        <div class="form-card">
+          <div class="form-header"><h2 style="font-size:1.25rem;font-weight:800;color:var(--navy)">Envoyer un message</h2><p style="font-size:.8rem;color:var(--text-muted);margin-top:.25rem">* Champs obligatoires</p></div>
+          <div class="form-body">
+            <div class="form-row" style="margin-bottom:0">
+              <div><label class="form-label">Nom complet *</label><input class="form-input" placeholder="Votre nom complet" type="text"></div>
+              <div><label class="form-label">Email *</label><input class="form-input" placeholder="votre@email.com" type="email"></div>
+            </div>
+            <label class="form-label" style="margin-top:0">Téléphone</label><input class="form-input" placeholder="+229 XX XX XX XX" type="tel">
+            <label class="form-label">Nature de la demande *</label>
+            <div class="type-btns">
+              <div class="type-btn selected" onclick="selectType(this)">Contact général</div>
+              <div class="type-btn" onclick="selectType(this)">Candidature</div>
+              <div class="type-btn" onclick="selectType(this)">Partenariat</div>
+              <div class="type-btn" onclick="selectType(this)">Commande</div>
+            </div>
+            <label class="form-label">Message * <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted)">(20 car. min.)</span></label>
+            <textarea class="form-input" rows="5" placeholder="Décrivez votre demande…" style="resize:none;margin-bottom:1.5rem"></textarea>
+            <a class="btn-primary" style="display:block;text-align:center;font-size:.9rem" onclick="document.getElementById('modal-confirm').classList.add('open')">Envoyer le message →</a>
+          </div>
+        </div>
+        <div>
+          <div class="cta-card" style="margin-bottom:.75rem">
+            <div style="font-size:.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:.5rem">Promotion 2026–2027</div>
+            <div style="font-size:2.5rem;font-weight:900;color:#fff;line-height:1">50</div>
+            <div style="font-size:.85rem;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:.75rem">places disponibles</div>
+            <div style="font-size:.75rem;color:rgba(255,255,255,.55);background:rgba(255,255,255,.08);padding:.6rem .9rem;border-radius:10px">🎓 Bac ou DEAT · 📅 Clôture 30 sept. 2026</div>
+          </div>
+          <div class="info-card-sm"><div class="info-icon-sm">📍</div><div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:3px">Adresse</div><div style="font-size:.82rem;font-weight:600;color:var(--text)">Sérou — Djougou, Donga</div><div style="font-size:.72rem;color:var(--text-muted)">République du Bénin</div></div></div>
+          <div class="info-card-sm"><div class="info-icon-sm">✉️</div><div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:3px">Email</div><a style="font-size:.82rem;font-weight:600;color:var(--primary)">contact@iuepma.bj</a></div></div>
+          <div class="info-card-sm"><div class="info-icon-sm">📞</div><div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:3px">Téléphone</div><a style="font-size:.82rem;font-weight:600;color:var(--primary)">+229 XX XX XX XX</a></div></div>
+          <div class="info-card-sm"><div class="info-icon-sm">🕐</div><div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:3px">Horaires</div><div style="font-size:.82rem;font-weight:600;color:var(--text)">Lun–Ven · 8h–17h</div><div style="font-size:.72rem;color:var(--text-muted)">Réponse email sous 48h</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ PAGE : SHOP ═══════════ -->
+<div class="page" id="page-shop">
+  <div class="page-header"><div class="page-header-inner"><div class="eyebrow" style="color:var(--lime)">Boutique UAI</div><h1>Produits de l'Unité d'Application</h1><p>Productions de l'Unité d'Application et d'Innovation — fruits, légumes, élevage, transformation.</p></div></div>
+  <div class="section" style="background:var(--surface)">
+    <div class="section-inner">
+      <div class="filter-btns" style="margin-bottom:2rem">
+        <span class="filter-btn active">Tous</span>
+        <span class="filter-btn">Légumes</span>
+        <span class="filter-btn">Fruits</span>
+        <span class="filter-btn">Élevage</span>
+        <span class="filter-btn">Transformation</span>
+        <span class="filter-btn">Semences</span>
+      </div>
+      <div class="shop-grid">
+        <div class="product-card"><div class="product-img">🍅</div><div class="product-body"><div class="product-name">Tomates — Production UAI</div><div class="product-price">800 <span class="product-unit">FCFA/kg</span></div><div style="margin-top:.5rem"><span class="spec-badge" style="background:rgba(26,92,42,.08)">En stock</span></div></div></div>
+        <div class="product-card"><div class="product-img">🥬</div><div class="product-body"><div class="product-name">Laitue — Maraîchage</div><div class="product-price">500 <span class="product-unit">FCFA/botte</span></div><div style="margin-top:.5rem"><span class="spec-badge" style="background:rgba(26,92,42,.08)">En stock</span></div></div></div>
+        <div class="product-card"><div class="product-img">🍯</div><div class="product-body"><div class="product-name">Miel d'Apiculture</div><div class="product-price">3 500 <span class="product-unit">FCFA/litre</span></div><div style="margin-top:.5rem"><span class="spec-badge" style="background:rgba(184,134,11,.1);color:var(--accent)">Sur commande</span></div></div></div>
+        <div class="product-card"><div class="product-img">🥚</div><div class="product-body"><div class="product-name">Œufs — Aviculture UAI</div><div class="product-price">150 <span class="product-unit">FCFA/unité</span></div><div style="margin-top:.5rem"><span class="spec-badge" style="background:rgba(26,92,42,.08)">En stock</span></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ MODAL CONFIRMATION ═══════════ -->
+<div class="modal" id="modal-confirm">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('modal-confirm').classList.remove('open')">✕</button>
+    <div style="width:72px;height:72px;border-radius:18px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:2.25rem">✅</div>
+    <h2 style="font-size:1.5rem;font-weight:900;color:var(--navy);margin-bottom:.75rem">Message envoyé !</h2>
+    <p style="font-size:.875rem;color:var(--text-soft);line-height:1.7;margin-bottom:1.25rem">Votre message a bien été reçu. Notre équipe vous répondra dans les <strong style="color:var(--primary)">48 heures ouvrables</strong>.</p>
+    <div style="background:var(--primary-soft);border-radius:14px;padding:1rem;text-align:left;margin-bottom:1.25rem">
+      <p style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--primary);margin-bottom:.75rem">En attendant</p>
+      <p style="font-size:.82rem;color:var(--text-soft);margin-bottom:.4rem" onclick="fermerModal();showPage('formations')" style="cursor:pointer">→ <span style="color:var(--primary);font-weight:600;cursor:pointer">Découvrir nos formations</span></p>
+      <p style="font-size:.82rem;color:var(--text-soft)" onclick="fermerModal();showPage('actualites')" style="cursor:pointer">→ <span style="color:var(--primary);font-weight:600;cursor:pointer">Lire nos actualités</span></p>
+    </div>
+    <button onclick="document.getElementById('modal-confirm').classList.remove('open')" style="width:100%;padding:.875rem;border-radius:14px;background:var(--primary);color:#fff;font-weight:700;font-size:.875rem;border:none;cursor:pointer">Fermer</button>
+  </div>
+</div>
+
+
+<script>
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  const page = document.getElementById('page-' + id);
+  if (page) { page.classList.add('active'); window.scrollTo(0, 0); }
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+}
+
+function selectType(el) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+</script>
+</body>
+</html>
 
